@@ -26,6 +26,7 @@ GIT_FETCH_CMD = 'git fetch'
 GIT_CHECK_REMOTE_CMD = 'git ls-remote'
 
 USER_DETAILS_PATH = '/users/%s'
+USER_ORG_DETAILS_PATH = '/user/orgs'
 
 DEFAULT_TOKEN_FILE = os.path.expanduser('~/.config/ghtoken')
 
@@ -358,7 +359,7 @@ class RepoUpdater(object):
         print "User:", get_color_str(self.args.username, Color.GREEN)
         user_data = self.get_user_data()
 
-        repos, excluded_repos = self.get_repos(user_data.repos_url, user_data.organizations_url)
+        repos, excluded_repos = self.get_repos(user_data.repos_url, GITHUB_API_HOST + USER_ORG_DETAILS_PATH)
         repos = self.filter_repo_names(repos, excluded_repos)
         for repo in repos:
             print get_color_str('{:-^60}'.format(repo.name), Color.YELLOW)
