@@ -119,7 +119,7 @@ class CodeRepo(object):
         self.full_name = gh_repo.full_name
         self.ssh_url = gh_repo.ssh_url
         self.default_branch = gh_repo.default_branch
-        self.description = gh_repo.description
+        self.description = gh_repo.description or ""
 
         self.target_directory = os.path.join(self.config.cwd, self.name)
         if self.config.mirror:
@@ -207,6 +207,10 @@ class WikiRepo(CodeRepo):
         self.ssh_url = self.ssh_url.rpartition('.git')[0] \
                        + '.wiki.git'
         self.default_branch = 'master'
+
+        if self.description == None:
+            self.description = gh_repo.name
+
         self.description += ' - Wiki'
 
     def try_clone(self, ignore_error=True):
@@ -226,7 +230,7 @@ class JsonRepo(object):
         self.name = gh_repo.name
         self.full_name = gh_repo.full_name
         self.repo_url = gh_repo.url
-        self.description = gh_repo.description
+        self.description = gh_repo.description or ""
 
         # Sanitize the content url to strip the {/number} type markers
         self.content_url = api_url.split('{')[0]
