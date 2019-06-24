@@ -22,7 +22,7 @@ GITHUB_API_HOST = 'https://api.github.com'
 GIT_CLONE_CMD = 'git clone %s %s %s'
 GIT_CLONE_API_URL = 'https://%s@github.com/%s'
 GIT_SHA_CMD = 'git rev-parse --short %s'
-GIT_FETCH_CMD = 'git fetch'
+GIT_FETCH_CMD = 'git fetch --prune'
 GIT_CHECK_REMOTE_CMD = 'git ls-remote'
 
 USER_DETAILS_PATH = '/users/%s'
