@@ -7,6 +7,7 @@ import argparse
 from collections import namedtuple
 from subprocess import Popen, PIPE
 
+from urllib import urlencode
 from urllib2 import urlopen
 import json
 from urlparse import urlparse
@@ -15,8 +16,9 @@ WHITELIST=[]
 BLACKLIST=[]
 
 LISTINGS_PER_PAGE = 100
-ACCESS_TOKEN_PARAM = '?access_token=%s'
-LISTING_PAGE_PARAM = '&per_page=%d&page=%d'
+ACCESS_TOKEN_PARAM = 'access_token'
+LISTINGS_PER_PAGE_PARAM = 'per_page'
+LISTING_PAGE_PARAM = 'page'
 GITHUB_API_HOST = 'https://api.github.com'
 
 GIT_CLONE_CMD = 'git clone %s %s %s'
@@ -73,7 +75,12 @@ class AttributeDict(dict):
         self[attr] = value
 
 def read_api_uri(uri, config, page=1):
-    uri += ACCESS_TOKEN_PARAM % config.token + LISTING_PAGE_PARAM % (LISTINGS_PER_PAGE, page)
+    params = {
+        ACCESS_TOKEN_PARAM: config.token,
+        LISTINGS_PER_PAGE_PARAM: LISTINGS_PER_PAGE,
+        LISTING_PAGE_PARAM: page,
+    }
+    uri += '?' + urlencode(params)
 
     if config.debug:
         print "Trying:", uri
