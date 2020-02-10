@@ -1,6 +1,6 @@
 gh_fetch
 ========
-###Downloader and updater for your github repos.
+### Downloader and updater for your github repos.
 
 
 - Did you ever needed to keep a backup of a large number of GitHub repos?
