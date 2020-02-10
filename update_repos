@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # encoding: utf-8
 
+import base64
 import sys
 import os
 import argparse
@@ -8,7 +9,7 @@ from collections import namedtuple
 from subprocess import Popen, PIPE
 
 from urllib import urlencode
-from urllib2 import urlopen
+from urllib2 import Request, urlopen
 import json
 from urlparse import urlparse
 
@@ -16,7 +17,6 @@ WHITELIST=[]
 BLACKLIST=[]
 
 LISTINGS_PER_PAGE = 100
-ACCESS_TOKEN_PARAM = 'access_token'
 LISTINGS_PER_PAGE_PARAM = 'per_page'
 LISTING_PAGE_PARAM = 'page'
 GITHUB_API_HOST = 'https://api.github.com'
@@ -76,16 +76,22 @@ class AttributeDict(dict):
 
 def read_api_uri(uri, config, page=1):
     params = {
-        ACCESS_TOKEN_PARAM: config.token,
         LISTINGS_PER_PAGE_PARAM: LISTINGS_PER_PAGE,
         LISTING_PAGE_PARAM: page,
     }
     uri += '?' + urlencode(params)
 
-    if config.debug:
-        print "Trying:", uri
+    creds = base64.b64encode(config.token.encode('utf-8')).decode('ascii')
+    basic_auth = 'Basic {}'.format(creds)
+    headers = {
+        'Authorization': basic_auth,
+    }
 
-    return urlopen(uri).read()
+    if config.debug:
+        print "Trying URI {} with headers {}".format(uri, headers)
+
+    req = Request(uri, headers=headers)
+    return urlopen(req).read()
 
 def get_json(uri, config, obj_type=AttributeDict, page=1):
     return json.loads(read_api_uri(uri, config, page), object_hook=obj_type)
