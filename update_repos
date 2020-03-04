@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # encoding: utf-8
 
 import base64
@@ -8,10 +8,10 @@ import argparse
 from collections import namedtuple
 from subprocess import Popen, PIPE
 
-from urllib import urlencode
-from urllib2 import Request, urlopen
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 import json
-from urlparse import urlparse
+from urllib.parse import urlparse
 
 WHITELIST=[]
 BLACKLIST=[]
@@ -53,7 +53,7 @@ def system_exec(command, directory=None, show_output=True, ignore_error=False):
         error = error.strip()
 
         if show_output and len(output) > 0:
-            print output
+            print(output)
             sys.stdout.flush()
 
         if process.returncode != 0 and not ignore_error:
@@ -63,9 +63,9 @@ def system_exec(command, directory=None, show_output=True, ignore_error=False):
         return ReturnInfo(process.returncode, output, error)
 
     except Exception as err:
-        print >>sys.stderr, Color.RED + "Could not execute", command
-        print >>sys.stderr, err, Color.END
-        print >>sys.stderr, "Terminating early"
+        print(Color.RED + "Could not execute", command, file=sys.stderr)
+        print(err, Color.END, file=sys.stderr)
+        print("Terminating early", file=sys.stderr)
         exit(1)
 
 class AttributeDict(dict):
@@ -88,7 +88,7 @@ def read_api_uri(uri, config, page=1):
     }
 
     if config.debug:
-        print "Trying URI {} with headers {}".format(uri, headers)
+        print("Trying URI {} with headers {}".format(uri, headers))
 
     req = Request(uri, headers=headers)
     return urlopen(req).read()
@@ -139,11 +139,11 @@ class CodeRepo(object):
             self.target_directory += '.git'
 
     def try_clone(self, ignore_error=False):
-        print "Using", self.target_directory
+        print("Using", self.target_directory)
         if os.path.isdir(self.target_directory):
             return False
 
-        print "Need to clone", self.name
+        print("Need to clone", self.name)
         if self.config.mirror:
             clone_opts = '--mirror'
         else:
@@ -164,10 +164,10 @@ class CodeRepo(object):
         # Let the caller decide if errors should be ignored.
         return_code = system_exec(clone_cmd, ignore_error=ignore_error).return_code
         if ignore_error and return_code != 0:
-            print "Repo for %s not initialized, skipping" % self.name
+            print("Repo for %s not initialized, skipping" % self.name)
             return True
 
-        print "Finished cloning"
+        print("Finished cloning")
         return True
 
     def get_sha_str(self, branch, directory):
@@ -179,8 +179,8 @@ class CodeRepo(object):
         return get_color_str(sha, Color.GREEN)
 
     def print_start_sha(self, branch, directory):
-        print("- " + get_color_str(branch, Color.GREEN) + " @ " \
-                + self.get_sha_str(branch, directory) + ' ..'),
+        print(("- " + get_color_str(branch, Color.GREEN) + " @ " \
+                + self.get_sha_str(branch, directory) + ' ..'), end=' ')
 
     def update(self, fatal_remote_errors = True):
         if self.try_clone(False):
@@ -192,15 +192,15 @@ class CodeRepo(object):
             # Is it fatal?
             if fatal_remote_errors:
                 error_message = get_color_str("ERROR: Repo for %s seems to have been deleted. Skipping update." % self.full_name, Color.RED)
-                print error_message
+                print(error_message)
                 raise Exception(error_message)
             else:
-                print get_color_str("WARNING: Repo for %s seems to have been deleted. Skipping update." % self.full_name, Color.GREEN)
+                print(get_color_str("WARNING: Repo for %s seems to have been deleted. Skipping update." % self.full_name, Color.GREEN))
                 return
 
         self.print_start_sha(self.default_branch, self.target_directory)
         system_exec(GIT_FETCH_CMD, self.target_directory, False)
-        print self.get_sha_str(self.default_branch, self.target_directory)
+        print(self.get_sha_str(self.default_branch, self.target_directory))
 
 class WikiRepo(CodeRepo):
     """GitHub wiki git repository"""
@@ -279,7 +279,7 @@ class JsonRepo(object):
             os.makedirs(target_directory)
 
         if self.config.debug:
-            print "Downloading %s" % target
+            print("Downloading %s" % target)
         data = read_api_uri(url, self.config)
         with open(target, 'wb') as dl_file:
             dl_file.write(data)
@@ -289,7 +289,7 @@ class IssuesRepo(JsonRepo):
         JsonRepo.__init__(self, gh_repo, gh_repo.issues_url, config, 'issues')
 
     def update(self):
-        print "Using", self.content_directory
+        print("Using", self.content_directory)
         for issue in get_json(self.content_url, self.config):
             self.download_file(issue.url)
             self.download_file(issue.comments_url)
@@ -300,7 +300,7 @@ class PullsRepo(JsonRepo):
         JsonRepo.__init__(self, gh_repo, gh_repo.pulls_url, config, 'pulls')
 
     def update(self):
-        print "Using", self.content_directory
+        print("Using", self.content_directory)
         for pull in get_json(self.content_url, self.config):
             self.download_file(pull.url)
             self.download_file(pull.commits_url)
@@ -312,7 +312,7 @@ class MilestonesRepo(JsonRepo):
                           'milestones')
 
     def update(self):
-        print "Using", self.content_directory
+        print("Using", self.content_directory)
         for milestone in get_json(self.content_url, self.config):
             self.download_file(milestone.url)
 
@@ -321,7 +321,7 @@ class TeamsRepo(JsonRepo):
         JsonRepo.__init__(self, gh_repo, gh_repo.teams_url, config, 'teams')
 
     def update(self):
-        print "Using", self.content_directory + '.json'
+        print("Using", self.content_directory + '.json')
         self.download_file(self.content_url)
 
 class CommentsRepo(JsonRepo):
@@ -330,7 +330,7 @@ class CommentsRepo(JsonRepo):
                           'comments')
 
     def update(self):
-        print "Using", self.content_directory + '.json'
+        print("Using", self.content_directory + '.json')
         self.download_file(self.content_url)
 
 class ForksRepo(JsonRepo):
@@ -338,7 +338,7 @@ class ForksRepo(JsonRepo):
         JsonRepo.__init__(self, gh_repo, gh_repo.forks_url, config, 'forks')
 
     def update(self):
-        print "Using", self.content_directory + '.json'
+        print("Using", self.content_directory + '.json')
         self.download_file(self.content_url)
 
 class RepoUpdater(object):
@@ -355,31 +355,31 @@ class RepoUpdater(object):
                 with open(self.args.token_file, 'r') as tfile:
                     self.args.token = tfile.read().strip()
             except IOError as err:
-                print >>sys.stderr, Color.RED + \
+                print(Color.RED + \
                     "Could not open token file %s: %s" \
                     % (self.args.token_file, err), \
-                    Color.END
-                print >>sys.stderr, "Terminating early"
+                    Color.END, file=sys.stderr)
+                print("Terminating early", file=sys.stderr)
                 exit(1)
 
         if self.args.debug:
-            print "Current configuration: "
+            print("Current configuration: ")
             for arg in self.args:
                 # We don't want this printed
                 if arg != 'token':
-                    print arg, ":", get_color_str(args[arg], Color.GREEN)
+                    print(arg, ":", get_color_str(args[arg], Color.GREEN))
 
     def update(self):
         if not os.path.isdir(self.args.cwd):
             os.makedirs(self.args.cwd)
 
-        print "User:", get_color_str(self.args.username, Color.GREEN)
+        print("User:", get_color_str(self.args.username, Color.GREEN))
         user_data = self.get_user_data()
 
         repos, excluded_repos = self.get_repos(user_data.repos_url, GITHUB_API_HOST + USER_ORG_DETAILS_PATH)
         repos = self.filter_repo_names(repos, excluded_repos)
         for repo in repos:
-            print get_color_str('{:-^60}'.format(repo.name), Color.YELLOW)
+            print(get_color_str('{:-^60}'.format(repo.name), Color.YELLOW))
             repo.update()
 
     def get_user_data(self):
@@ -422,14 +422,14 @@ class RepoUpdater(object):
         repos = repos_page
 
         if self.args.debug:
-            print "Retrieved %d entries from %s" % (len(repos), url )
+            print("Retrieved %d entries from %s" % (len(repos), url ))
 
         page = 2
         while len(repos_page) >= LISTINGS_PER_PAGE:
             repos_page = get_json(url, args, clazz, page)
 
             if self.args.debug:
-                print "Retrieved %d entries from %s" % (len(repos_page), url)
+                print("Retrieved %d entries from %s" % (len(repos_page), url))
 
             repos += repos_page
             page += 1
@@ -439,7 +439,7 @@ class RepoUpdater(object):
     def get_repos(self, repos_url, orgs_url):
         repos = []
         if self.args.debug:
-            print "Getting repo data from", get_color_str(repos_url, Color.GREEN)
+            print("Getting repo data from", get_color_str(repos_url, Color.GREEN))
 
         own_repos, repo_count = self.get_own_repos(repos_url)
         if not self.args.exclude_own:
@@ -450,11 +450,11 @@ class RepoUpdater(object):
             repos += org_repos
 
         if self.args.debug:
-            print "Available repos:", get_color_str(str(len(repos)), Color.GREEN)
+            print("Available repos:", get_color_str(str(len(repos)), Color.GREEN))
             for repo in repos:
                 owner = repo.owner.login
-                print " -", get_color_str(repo.name, Color.YELLOW)
-                print " " * 5, repo.description
+                print(" -", get_color_str(repo.name, Color.YELLOW))
+                print(" " * 5, repo.description)
 
         excluded_repos = repo_count + org_repo_count - len(repos)
         return repos, excluded_repos
@@ -472,12 +472,12 @@ class RepoUpdater(object):
 
         ignored_repos_str = " (" + str(filtered_repos) + " filtered, " + str(excluded_repos) + " excluded)"
         repo_count_str = str(original_repos - filtered_repos) + " / " + str(original_repos)
-        print "Fetching repos:", get_color_str(repo_count_str + ignored_repos_str, Color.GREEN)
+        print("Fetching repos:", get_color_str(repo_count_str + ignored_repos_str, Color.GREEN))
 
         for repo in repos:
             owner = repo.owner.login
-            print " -", Color.YELLOW + repo.name, Color.END
-            print " " * 5, repo.description
+            print(" -", Color.YELLOW + repo.name, Color.END)
+            print(" " * 5, repo.description)
 
         return repos
 
