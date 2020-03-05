@@ -92,7 +92,7 @@ def read_api_uri(uri, config, page=1):
         print("Trying URI {} with headers {}".format(uri, headers))
 
     req = Request(uri, headers=headers)
-    return urlopen(req).read()
+    return urlopen(req).read().decode()
 
 def get_json(uri, config, obj_type=AttributeDict, page=1):
     return json.loads(read_api_uri(uri, config, page), object_hook=obj_type)
@@ -283,7 +283,7 @@ class JsonRepo(object):
             print("Downloading %s" % target)
         data = read_api_uri(url, self.config)
         with open(target, 'wb') as dl_file:
-            dl_file.write(data)
+            dl_file.write(data.encode())
 
 class IssuesRepo(JsonRepo):
     def __init__(self, gh_repo, config):
