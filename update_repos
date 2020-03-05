@@ -47,7 +47,8 @@ def system_exec(command, directory=None, show_output=True, ignore_error=False):
         directory = os.getcwd()
 
     try:
-        process = Popen(command, stdout=PIPE, stderr=PIPE, shell=True, cwd=directory)
+        process = Popen(command, stdout=PIPE, stderr=PIPE, shell=True,
+                        cwd=directory, universal_newlines=True)
         (output, error) = process.communicate()
         output = output.strip()
         error = error.strip()
