@@ -97,7 +97,7 @@ def read_api_uri(uri, config, page=1):
         print("Trying URI {} with headers {}".format(uri, headers))
 
     req = Request(uri, headers=headers)
-    return urlopen(req).read().decode()
+    return urlopen(req).read().decode('utf-8')
 
 def get_json(uri, config, obj_type=AttributeDict, page=1):
     return json.loads(read_api_uri(uri, config, page), object_hook=obj_type)
